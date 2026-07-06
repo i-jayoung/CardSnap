@@ -44,12 +44,27 @@ def check_nuitka(python):
         return False
 
 
+def _force_rmtree(path):
+    def _on_error(func, fpath, exc_info):
+        import stat
+        try:
+            os.chmod(fpath, stat.S_IWRITE)
+            func(fpath)
+        except Exception:
+            pass
+    shutil.rmtree(path, onerror=_on_error)
+
+
 def clean_build_artifacts(project_dir):
     for name in ["main.build", "main.dist", "main.onefile-build"]:
         path = os.path.join(project_dir, name)
         if os.path.isdir(path):
             print(f"Cleaning previous build: {path}")
-            shutil.rmtree(path, ignore_errors=True)
+            _force_rmtree(path)
+            if os.path.isdir(path):
+                print(f"  WARNING: could not fully remove {path}, trying cmd...")
+                subprocess.run(["cmd", "/c", "rmdir", "/s", "/q", path],
+                               capture_output=True)
 
 
 def build():
