@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+*.dist/
+*.build/
+*.onefile-build/
+*.spec
+cards.json
+settings.json
+convert_icon.py

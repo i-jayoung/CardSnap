@@ -1,0 +1,168 @@
+QWidget {
+    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+}
+
+QMainWindow, QDialog {
+    background-color: #1e1e2e;
+}
+
+QLabel {
+    color: #cdd6f4;
+}
+
+QTextEdit, QPlainTextEdit {
+    background-color: #313244;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    padding: 8px;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 13px;
+    selection-background-color: #4fc3f7;
+    selection-color: #1e1e2e;
+}
+
+QTextEdit:focus, QPlainTextEdit:focus {
+    border-color: #4fc3f7;
+}
+
+QPushButton {
+    background-color: #45475a;
+    color: #cdd6f4;
+    border: 1px solid #585b70;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 12px;
+    outline: none;
+}
+
+QPushButton:focus {
+    outline: none;
+}
+
+QPushButton:hover {
+    background-color: #585b70;
+    border-color: #4fc3f7;
+}
+
+QPushButton:pressed {
+    background-color: #4fc3f7;
+    color: #1e1e2e;
+}
+
+QPushButton#primaryBtn {
+    background-color: #4fc3f7;
+    color: #1e1e2e;
+    font-weight: bold;
+    border: none;
+}
+
+QPushButton#primaryBtn:hover {
+    background-color: #81d4fa;
+}
+
+QPushButton#primaryBtn:pressed {
+    background-color: #29b6f6;
+}
+
+QPushButton#dangerBtn {
+    background-color: #f38ba8;
+    color: #1e1e2e;
+    border: none;
+}
+
+QCheckBox {
+    color: #cdd6f4;
+    spacing: 6px;
+    outline: none;
+}
+
+QCheckBox:focus {
+    outline: none;
+}
+
+QCheckBox::indicator {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: none;
+}
+
+QCheckBox::indicator:unchecked {
+    image: url(ICON_DIR/checkbox-unchecked.svg);
+}
+
+QCheckBox::indicator:checked {
+    image: url(ICON_DIR/checkbox-checked.svg);
+}
+
+QScrollArea {
+    border: none;
+    background: transparent;
+}
+
+QWidget#cardsContainer {
+    background: transparent;
+}
+
+CardTile {
+    background-color: #282838;
+    border-bottom: 1px solid #3a3a4a;
+    border-radius: 0px;
+}
+
+CardTile:hover {
+    background-color: #313148;
+}
+
+QPushButton#dangerBtn:hover {
+    background-color: #e06080;
+}
+
+QScrollBar:vertical {
+    background: #313244;
+    width: 8px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical {
+    background: #585b70;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #4fc3f7;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    height: 0px;
+}
+
+QMenu {
+    background: #2d2d2d;
+    color: #cdd6f4;
+    border: 1px solid #45475a;
+    padding: 4px;
+    border-radius: 6px;
+}
+
+QMenu::item {
+    padding: 6px 24px;
+    border-radius: 4px;
+}
+
+QMenu::item:selected {
+    background: #4fc3f7;
+    color: #1e1e2e;
+}
+
+QMenu::separator {
+    background: #45475a;
+    height: 1px;
+    margin: 4px 8px;
+}
