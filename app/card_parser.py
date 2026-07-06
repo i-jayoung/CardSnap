@@ -37,7 +37,7 @@ def _fullwidth_to_halfwidth(text: str) -> str:
 _OCR_DIGIT_MAP = str.maketrans({
     'O': '0', 'o': '0',
     'Q': '0',
-    'l': '1', 'I': '1', '|': '1',
+    'l': '1', 'I': '1',
     'S': '5', 's': '5',
     'B': '8',
     'G': '6',
@@ -50,7 +50,7 @@ _OCR_DIGIT_MAP = str.maketrans({
 
 def _fix_ocr_digits(text: str) -> str:
     return re.sub(
-        r'(?<=[0-9])([OoQlI|SsBGZgDb])(?=[0-9])',
+        r'(?<=[0-9])([OoQlISsBGZgDb])(?=[0-9])',
         lambda m: m.group(1).translate(_OCR_DIGIT_MAP),
         text,
     )
@@ -60,10 +60,10 @@ def _fix_ocr_in_digit_groups(text: str) -> str:
     def _fix_group(m):
         return m.group(0).translate(_OCR_DIGIT_MAP)
 
-    text = re.sub(r'[0-9OoQlI|SsBGZgDb]{13,19}', _fix_group, text)
+    text = re.sub(r'[0-9OoQlISsBGZgDb]{13,19}', _fix_group, text)
     text = re.sub(
-        r'[0-9OoQlI|SsBGZgDb]{4}[\s\-][0-9OoQlI|SsBGZgDb]{4}'
-        r'[\s\-][0-9OoQlI|SsBGZgDb]{4}[\s\-][0-9OoQlI|SsBGZgDb]{3,4}',
+        r'[0-9OoQlISsBGZgDb]{4}[\s\-][0-9OoQlISsBGZgDb]{4}'
+        r'[\s\-][0-9OoQlISsBGZgDb]{4}[\s\-][0-9OoQlISsBGZgDb]{3,4}',
         _fix_group, text,
     )
     return text
@@ -239,9 +239,9 @@ def _extract_cvv_from_text(text: str) -> Optional[Tuple[str, int, int]]:
     for m in re.finditer(r'\b(\d{3,4})\b', text):
         val = m.group(1)
         num = int(val)
-        if len(val) == 4 and 100 <= num <= 9999:
+        if len(val) == 4 and 0 <= num <= 9999:
             return val, m.start(), m.end()
-        if len(val) == 3 and 1 <= num <= 999:
+        if len(val) == 3 and 0 <= num <= 999:
             return val, m.start(), m.end()
     return None
 
@@ -282,6 +282,7 @@ def _greedy_scan(text: str) -> List[CardInfo]:
         search_text = text[num_end:region_end]
 
         exp_result = _extract_expiry_from_text(search_text)
+        exp_in_search = exp_result is not None
         if not exp_result:
             exp_result = _extract_expiry_from_text(text[max(0, num_start - 30):num_start])
         if not exp_result:
@@ -289,17 +290,26 @@ def _greedy_scan(text: str) -> List[CardInfo]:
 
         expiry, exp_start_rel, exp_end_rel = exp_result
 
-        after_expiry = search_text[exp_end_rel:]
+        if exp_in_search:
+            after_expiry = search_text[exp_end_rel:]
+        else:
+            after_expiry = search_text
+
         cvv_result = _extract_cvv_from_text(after_expiry)
+        cvv_from_after = cvv_result is not None
         if not cvv_result:
             cvv_result = _extract_cvv_from_text(search_text)
+            cvv_from_after = False
         if not cvv_result:
             continue
 
         cvv_val = cvv_result[0]
 
         if cvv_val == expiry.replace('/', ''):
-            remaining = after_expiry[cvv_result[2]:] if cvv_result else ""
+            if cvv_from_after:
+                remaining = after_expiry[cvv_result[2]:]
+            else:
+                remaining = search_text[cvv_result[2]:]
             cvv_result2 = _extract_cvv_from_text(remaining)
             if cvv_result2:
                 cvv_val = cvv_result2[0]
@@ -378,15 +388,20 @@ def _parse_single_line_legacy(line: str) -> Optional[CardInfo]:
 
     after_exp = remaining_text[exp_result[2]:]
     cvv_result = _extract_cvv_from_text(after_exp)
+    cvv_from_after = cvv_result is not None
     if not cvv_result:
         cvv_result = _extract_cvv_from_text(remaining_text)
+        cvv_from_after = False
     if not cvv_result:
         return None
 
     cvv_val = cvv_result[0]
 
     if cvv_val == expiry.replace('/', ''):
-        rest = after_exp[cvv_result[2]:] if cvv_result else ""
+        if cvv_from_after:
+            rest = after_exp[cvv_result[2]:]
+        else:
+            rest = remaining_text[cvv_result[2]:]
         cvv2 = _extract_cvv_from_text(rest)
         if cvv2:
             cvv_val = cvv2[0]

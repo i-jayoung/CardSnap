@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
         self._dark_titlebar_done = False
         self._ocr_thread: QThread | None = None
         self._ocr_source: str = ""
+        self._ocr_generation: int = 0
 
         self._settings = load_settings()
 
@@ -51,13 +52,16 @@ class MainWindow(QMainWindow):
             self._settings["hotkey_clipboard"],
         )
         self._tray = TrayIcon(self._pin_manager, self)
+        self._tray.update_hotkey_labels(
+            self._settings["hotkey_screenshot"],
+            self._settings["hotkey_clipboard"],
+        )
 
         self._connect_signals()
         self._setup_ui()
         self._load_styles()
 
         self._tray.show()
-        self._hotkey_manager.start()
 
         if not start_minimized:
             QTimer.singleShot(0, self._deferred_first_show)
@@ -505,7 +509,6 @@ class MainWindow(QMainWindow):
             self._status.setText("请输入信用卡信息")
             return
         self._status.setText("正在解析输入...")
-        self._input_text_snapshot = text
         self._start_ocr_task("手动输入", text=text)
 
 
@@ -514,6 +517,7 @@ class MainWindow(QMainWindow):
     def _start_ocr_task(self, source: str, qimage: QImage = None, text: str = None):
         self._cleanup_ocr_thread()
         self._ocr_source = source
+        self._ocr_generation += 1
 
         if qimage is not None:
             Toast.get().show_message(f"正在识别{source}...", icon="🔍", duration_ms=0)
@@ -522,6 +526,7 @@ class MainWindow(QMainWindow):
 
         self._ocr_thread = QThread()
         self._ocr_worker = OcrWorker(qimage=qimage, text=text)
+        self._ocr_worker._generation = self._ocr_generation
         self._ocr_worker.moveToThread(self._ocr_thread)
         self._ocr_thread.started.connect(self._ocr_worker.run)
         self._ocr_worker.finished.connect(self._on_ocr_finished)
@@ -530,13 +535,21 @@ class MainWindow(QMainWindow):
 
     def _cleanup_ocr_thread(self):
         if self._ocr_thread is not None:
+            if self._ocr_worker is not None:
+                self._ocr_worker.finished.disconnect()
+                self._ocr_worker.error.disconnect()
             self._ocr_thread.quit()
             self._ocr_thread.wait(5000)
+            if self._ocr_worker is not None:
+                self._ocr_worker.deleteLater()
             self._ocr_worker = None
             self._ocr_thread = None
 
     @Slot(str, list)
     def _on_ocr_finished(self, text: str, cards: list):
+        worker = self.sender()
+        if worker and hasattr(worker, '_generation') and worker._generation != self._ocr_generation:
+            return
         source = self._ocr_source
         self._cleanup_ocr_thread()
         toast = Toast.get()
@@ -580,6 +593,9 @@ class MainWindow(QMainWindow):
 
     @Slot(str)
     def _on_ocr_error(self, err: str):
+        worker = self.sender()
+        if worker and hasattr(worker, '_generation') and worker._generation != self._ocr_generation:
+            return
         self._cleanup_ocr_thread()
         self._status.setText(f"识别出错: {err}")
         Toast.get().show_message(f"识别出错: {err}", icon="❌", duration_ms=4000, bg="error")
@@ -732,6 +748,7 @@ class MainWindow(QMainWindow):
         hk2 = new_settings["hotkey_clipboard"]
         self._screenshot_btn.setText(f"📷 截图识别  {hk1}")
         self._paste_btn.setText(f"📋 剪贴板识别  {hk2}")
+        self._tray.update_hotkey_labels(hk1, hk2)
         self._status.setText("设置已保存")
 
     # ---------- window lifecycle ----------

@@ -9,10 +9,10 @@ from PySide6.QtGui import QFont
 def main():
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
 
-    app = QApplication(sys.argv)
-    app.setHighDpiScaleFactorRoundingPolicy(
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
     )
+    app = QApplication(sys.argv)
     app.setQuitOnLastWindowClosed(False)
 
     shared = QSharedMemory("CardSnap_SingleInstance")

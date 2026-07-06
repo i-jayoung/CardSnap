@@ -75,7 +75,12 @@ class PinManager:
     def cards(self) -> list[CardInfo]:
         return [p.card for p in self._pins]
 
-    def pin_card(self, card: CardInfo) -> PinnedCardWindow:
+    def is_pinned(self, card: CardInfo) -> bool:
+        return any(p.card.number == card.number for p in self._pins)
+
+    def pin_card(self, card: CardInfo) -> PinnedCardWindow | None:
+        if self.is_pinned(card):
+            return None
         win = PinnedCardWindow(card)
         win.closed.connect(self._on_pin_closed)
         pos = self._next_position()

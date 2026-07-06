@@ -28,6 +28,8 @@ class TrayIcon(QSystemTrayIcon):
     def __init__(self, pin_manager, parent=None):
         super().__init__(parent)
         self._pin_manager = pin_manager
+        self._hotkey_screenshot = "Ctrl+Alt+C"
+        self._hotkey_clipboard = "Ctrl+Alt+V"
         self.setIcon(get_app_icon())
         self.setToolTip("CardSnap - 信用卡桌面助手")
 
@@ -42,13 +44,13 @@ class TrayIcon(QSystemTrayIcon):
             QMenu::separator { background: #555; height: 1px; margin: 4px 8px; }
         """)
 
-        screenshot_act = QAction("截图识别 (Ctrl+Alt+C)", self)
-        screenshot_act.triggered.connect(self.screenshot_requested.emit)
-        menu.addAction(screenshot_act)
+        self._screenshot_act = QAction(f"截图识别 ({self._hotkey_screenshot})", self)
+        self._screenshot_act.triggered.connect(self.screenshot_requested.emit)
+        menu.addAction(self._screenshot_act)
 
-        clipboard_act = QAction("剪贴板识别 (Ctrl+Alt+V)", self)
-        clipboard_act.triggered.connect(self.clipboard_requested.emit)
-        menu.addAction(clipboard_act)
+        self._clipboard_act = QAction(f"剪贴板识别 ({self._hotkey_clipboard})", self)
+        self._clipboard_act.triggered.connect(self.clipboard_requested.emit)
+        menu.addAction(self._clipboard_act)
 
         menu.addSeparator()
 
@@ -102,6 +104,12 @@ class TrayIcon(QSystemTrayIcon):
             close_all = QAction("关闭所有钉图", self)
             close_all.triggered.connect(self.close_all_pins_requested.emit)
             self._pins_menu.addAction(close_all)
+
+    def update_hotkey_labels(self, screenshot_key: str, clipboard_key: str):
+        self._hotkey_screenshot = screenshot_key
+        self._hotkey_clipboard = clipboard_key
+        self._screenshot_act.setText(f"截图识别 ({screenshot_key})")
+        self._clipboard_act.setText(f"剪贴板识别 ({clipboard_key})")
 
     def _toggle_autostart(self, checked):
         set_autostart(checked)

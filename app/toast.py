@@ -45,12 +45,14 @@ class Toast(QWidget):
         self._fade_anim = QPropertyAnimation(self._opacity, b"opacity")
         self._fade_anim.setDuration(300)
         self._fade_anim.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self._fade_anim.finished.connect(self._on_fade_done)
 
         self._slide_anim = QPropertyAnimation(self, b"pos")
         self._slide_anim.setDuration(300)
         self._slide_anim.setEasingCurve(QEasingCurve.Type.OutCubic)
 
         self._bg_color = QColor(30, 30, 46, 230)
+        self._fading_out = False
 
     def paintEvent(self, event):
         p = QPainter(self)
@@ -96,6 +98,7 @@ class Toast(QWidget):
         target_y = geo.bottom() - self.height() - 16
         start_y = geo.bottom() + 10
 
+        self._fading_out = False
         self._opacity.setOpacity(0.95)
         self.move(target_x, start_y)
         self.show()
@@ -109,14 +112,16 @@ class Toast(QWidget):
             self._hide_timer.start(duration_ms)
 
     def _fade_out(self):
+        self._fading_out = True
         self._fade_anim.setStartValue(0.95)
         self._fade_anim.setEndValue(0.0)
-        self._fade_anim.finished.connect(self._on_fade_done)
         self._fade_anim.start()
 
     def _on_fade_done(self):
+        if not self._fading_out:
+            return
+        self._fading_out = False
         self.hide()
-        self._fade_anim.finished.disconnect(self._on_fade_done)
         self._opacity.setOpacity(0.95)
 
     def dismiss(self):

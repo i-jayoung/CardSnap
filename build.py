@@ -44,8 +44,17 @@ def check_nuitka(python):
         return False
 
 
+def clean_build_artifacts(project_dir):
+    for name in ["main.build", "main.dist", "main.onefile-build"]:
+        path = os.path.join(project_dir, name)
+        if os.path.isdir(path):
+            print(f"Cleaning previous build: {path}")
+            shutil.rmtree(path, ignore_errors=True)
+
+
 def build():
     project_dir = os.path.dirname(os.path.abspath(__file__))
+    clean_build_artifacts(project_dir)
 
     venv_python = os.path.join(project_dir, ".venv", "Scripts", "python.exe")
     global_python = shutil.which("python") or sys.executable

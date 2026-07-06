@@ -100,7 +100,8 @@ class ScreenCapture(QWidget):
 
             self.hide()
 
-            ratio = QGuiApplication.primaryScreen().devicePixelRatio()
+            screen = self._screen_at(sel.center()) or QGuiApplication.primaryScreen()
+            ratio = screen.devicePixelRatio() if screen else 1.0
             crop_rect = QRect(
                 int(sel.x() * ratio),
                 int(sel.y() * ratio),
@@ -115,6 +116,13 @@ class ScreenCapture(QWidget):
         self.hide()
         self.cancelled.emit()
         self._cleanup()
+
+    @staticmethod
+    def _screen_at(point: QPoint):
+        for s in QGuiApplication.screens():
+            if s.geometry().contains(point):
+                return s
+        return None
 
     def _cleanup(self):
         self._is_selecting = False
