@@ -124,7 +124,7 @@ class PinManager:
 
         geo = screen.availableGeometry()
         margin = 20
-        card_w, card_h = 340, 200
+        card_w, card_h = 440, 260
         spacing = 16
 
         idx = len(self._pins)

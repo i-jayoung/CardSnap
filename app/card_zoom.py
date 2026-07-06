@@ -10,8 +10,8 @@ from app.card_widget import CardRenderer
 from app.export_utils import grab_widget, export_to_file, copy_to_clipboard
 
 
-ZOOM_W = 600
-ZOOM_H = 352
+ZOOM_W = 780
+ZOOM_H = 460
 
 
 class CardZoomDialog(QDialog):

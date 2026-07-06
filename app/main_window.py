@@ -238,18 +238,21 @@ class MainWindow(QMainWindow):
         self._search_edit.textChanged.connect(self._on_search_changed)
         main_layout.addWidget(self._search_edit)
 
-        # --- 2-column card grid ---
+        # --- responsive card grid ---
         self._cards_container = QWidget()
         self._cards_container.setObjectName("cardsContainer")
         self._cards_layout = QGridLayout(self._cards_container)
         self._cards_layout.setSpacing(6)
         self._cards_layout.setContentsMargins(0, 0, 0, 0)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setWidget(self._cards_container)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        main_layout.addWidget(scroll, 1)
+        self._scroll = QScrollArea()
+        self._scroll.setWidgetResizable(True)
+        self._scroll.setWidget(self._cards_container)
+        self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        main_layout.addWidget(self._scroll, 1)
+
+        self._tile_min_width = 500
+        self._grid_cols = 2
 
         # --- bottom bar ---
         bottom = QHBoxLayout()
@@ -268,6 +271,14 @@ class MainWindow(QMainWindow):
         bottom.addWidget(export_sel_btn)
 
         bottom.addStretch()
+
+        self._total_label = QLabel("共 0 张")
+        self._total_label.setStyleSheet("color: #6c7086; font-size: 12px;")
+        bottom.addWidget(self._total_label)
+
+        self._selection_label = QLabel("已选 0 张")
+        self._selection_label.setStyleSheet("color: #a6adc8; font-size: 12px; margin-left: 4px;")
+        bottom.addWidget(self._selection_label)
 
         select_all_btn = QPushButton("全选")
         select_all_btn.setFixedHeight(30)
@@ -328,6 +339,7 @@ class MainWindow(QMainWindow):
             tile.pin_requested.connect(self._pin_single)
             tile.export_requested.connect(self._export_single)
             tile.delete_requested.connect(self._delete_tile)
+            tile.checkbox.stateChanged.connect(self._update_selection_count)
             self._tiles.append(tile)
             self._cards.append(card)
             added += 1
@@ -457,9 +469,20 @@ class MainWindow(QMainWindow):
         self._update_status()
         self._persist()
 
+    def _calc_grid_cols(self) -> int:
+        if not hasattr(self, '_scroll'):
+            return 2
+        vp_width = self._scroll.viewport().width()
+        spacing = self._cards_layout.spacing()
+        cols = max(1, (vp_width + spacing) // (self._tile_min_width + spacing))
+        return cols
+
     def _rebuild_grid(self):
         while self._cards_layout.count():
             self._cards_layout.takeAt(0)
+
+        cols = self._calc_grid_cols()
+        self._grid_cols = cols
 
         query = self._search_edit.text().strip().lower() if hasattr(self, '_search_edit') else ""
         visible_idx = 0
@@ -468,8 +491,8 @@ class MainWindow(QMainWindow):
                 tile.setVisible(False)
             else:
                 tile.setVisible(True)
-                row = visible_idx // 2
-                col = visible_idx % 2
+                row = visible_idx // cols
+                col = visible_idx % cols
                 self._cards_layout.addWidget(tile, row, col)
                 visible_idx += 1
 
@@ -477,6 +500,9 @@ class MainWindow(QMainWindow):
             self._search_edit.setToolTip(f"匹配 {visible_idx}/{len(self._tiles)}")
         elif hasattr(self, '_search_edit'):
             self._search_edit.setToolTip("")
+
+        if hasattr(self, '_selection_label'):
+            self._update_selection_count()
 
     @staticmethod
     def _tile_matches(tile, query: str) -> bool:
@@ -500,6 +526,8 @@ class MainWindow(QMainWindow):
         n = len(self._cards)
         self._status.setText(f"共 {n} 张卡片" if n else "")
         self._tray.update_pins_menu()
+        if hasattr(self, '_selection_label'):
+            self._update_selection_count()
 
     # ---------- input parsing ----------
 
@@ -723,6 +751,13 @@ class MainWindow(QMainWindow):
         for tile in self._tiles:
             tile.checkbox.setChecked(checked)
 
+    def _update_selection_count(self):
+        visible = [t for t in self._tiles if t.isVisible()]
+        selected = sum(1 for t in visible if t.is_checked)
+        total = len(visible)
+        self._total_label.setText(f"共 {total} 张")
+        self._selection_label.setText(f"已选 {selected} 张")
+
     # ---------- settings ----------
 
     @Slot()
@@ -774,6 +809,12 @@ class MainWindow(QMainWindow):
         self._cleanup_ocr_thread()
         self._pin_manager.close_all()
         QApplication.quit()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        new_cols = self._calc_grid_cols()
+        if new_cols != self._grid_cols:
+            self._rebuild_grid()
 
     def closeEvent(self, event: QCloseEvent):
         if self._really_quit:

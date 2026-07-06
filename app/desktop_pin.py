@@ -23,8 +23,10 @@ class PinnedCardWindow(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
+        PIN_W, PIN_H = 440, 260
         self._renderer = CardRenderer(card, self)
-        self.setFixedSize(self._renderer.size())
+        self._renderer.setFixedSize(PIN_W, PIN_H)
+        self.setFixedSize(PIN_W, PIN_H)
 
     def paintEvent(self, event):
         pass
