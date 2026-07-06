@@ -5,11 +5,7 @@ from PySide6.QtGui import QImage, QPixmap
 
 
 def generate_qr_image(card_info, box_size: int = 6, border: int = 1) -> Image.Image:
-    data = (
-        f"Card: {card_info.formatted_number}\n"
-        f"Exp: {card_info.expiry}\n"
-        f"CVV: {card_info.cvv}"
-    )
+    data = f"{card_info.formatted_number}\n{card_info.expiry}\n{card_info.cvv}"
     qr = qrcode.QRCode(
         version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_H,

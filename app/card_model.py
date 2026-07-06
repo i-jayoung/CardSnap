@@ -111,6 +111,10 @@ class CardInfo:
         return ("#6b5ce7", "#a855f7")
 
     @property
+    def is_complete(self) -> bool:
+        return bool(self.expiry) and bool(self.cvv)
+
+    @property
     def is_valid(self) -> bool:
         return luhn_check(self.number) and len(self.expiry) >= 4 and len(self.cvv) >= 3
 

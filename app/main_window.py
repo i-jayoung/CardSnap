@@ -47,6 +47,7 @@ class MainWindow(QMainWindow):
         self._pin_manager.set_on_change(self._on_pins_changed)
         self._screen_capture = ScreenCapture()
         self._screen_capture.captured.connect(self._on_screenshot_captured)
+        self._screen_capture.cancelled.connect(self._on_screenshot_cancelled)
         self._hotkey_manager = HotkeyManager(self)
         self._hotkey_manager.update_hotkeys(
             self._settings["hotkey_screenshot"],
@@ -392,7 +393,7 @@ class MainWindow(QMainWindow):
         self._persist()
 
     def _delete_selected(self):
-        selected = [t for t in self._tiles if t.checkbox.isChecked()]
+        selected = [t for t in self._visible_tiles() if t.checkbox.isChecked()]
         if not selected:
             self._status.setText("没有选中任何卡片")
             return
@@ -634,16 +635,21 @@ class MainWindow(QMainWindow):
     @Slot()
     def _start_screenshot(self):
         if self.isVisible() and not self.isMinimized():
-            self.showMinimized()
-        QTimer.singleShot(400, self._do_screenshot)
+            self.setWindowOpacity(0)
+        QTimer.singleShot(150, self._do_screenshot)
 
     def _do_screenshot(self):
         self._screen_capture.start()
 
     @Slot(QPixmap)
     def _on_screenshot_captured(self, pixmap: QPixmap):
+        self.setWindowOpacity(1)
         self._status.setText("正在 OCR 识别（后台处理中）...")
         self._start_ocr_task("截图", qimage=pixmap.toImage())
+
+    @Slot()
+    def _on_screenshot_cancelled(self):
+        self.setWindowOpacity(1)
 
     @Slot(list)
     def _on_pin_selection(self, selected_cards):
@@ -708,7 +714,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _pin_selected(self):
-        selected = [t.card for t in self._tiles if t.is_checked]
+        selected = [t.card for t in self._visible_tiles() if t.is_checked]
         if not selected:
             self._status.setText("请先勾选要钉的卡片")
             return
@@ -729,7 +735,7 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def _export_selected(self):
-        selected_tiles = [t for t in self._tiles if t.is_checked]
+        selected_tiles = [t for t in self._visible_tiles() if t.is_checked]
         if not selected_tiles:
             self._status.setText("请先勾选要导出的卡片")
             return
@@ -747,12 +753,18 @@ class MainWindow(QMainWindow):
     def _on_pins_changed(self):
         self._tray.update_pins_menu()
 
+    def _visible_tiles(self) -> list:
+        query = self._search_edit.text().strip().lower() if hasattr(self, '_search_edit') else ""
+        if query:
+            return [t for t in self._tiles if self._tile_matches(t, query)]
+        return list(self._tiles)
+
     def _set_all_checked(self, checked: bool):
-        for tile in self._tiles:
+        for tile in self._visible_tiles():
             tile.checkbox.setChecked(checked)
 
     def _update_selection_count(self):
-        visible = [t for t in self._tiles if t.isVisible()]
+        visible = self._visible_tiles()
         selected = sum(1 for t in visible if t.is_checked)
         total = len(visible)
         self._total_label.setText(f"共 {total} 张")

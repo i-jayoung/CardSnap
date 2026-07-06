@@ -120,11 +120,16 @@ class CardRenderer(QWidget):
         p.drawText(QRectF(24, 128, 80, 16),
                    Qt.AlignmentFlag.AlignLeft, "VALID THRU")
 
-        p.setPen(QColor(255, 255, 255))
         val_font = QFont("Consolas", 13, QFont.Weight.Bold)
         p.setFont(val_font)
-        p.drawText(QRectF(24, 144, 80, 24),
-                   Qt.AlignmentFlag.AlignLeft, self.card.expiry)
+        if self.card.expiry:
+            p.setPen(QColor(255, 255, 255))
+            p.drawText(QRectF(24, 144, 80, 24),
+                       Qt.AlignmentFlag.AlignLeft, self.card.expiry)
+        else:
+            p.setPen(QColor(255, 200, 200, 180))
+            p.drawText(QRectF(24, 144, 80, 24),
+                       Qt.AlignmentFlag.AlignLeft, "--/--")
 
     def _draw_cvv(self, p: QPainter):
         p.setPen(QColor(255, 255, 255, 160))
@@ -133,11 +138,16 @@ class CardRenderer(QWidget):
         p.drawText(QRectF(120, 128, 60, 16),
                    Qt.AlignmentFlag.AlignLeft, "CVV")
 
-        p.setPen(QColor(255, 255, 255))
         val_font = QFont("Consolas", 13, QFont.Weight.Bold)
         p.setFont(val_font)
-        p.drawText(QRectF(120, 144, 60, 24),
-                   Qt.AlignmentFlag.AlignLeft, self.card.cvv)
+        if self.card.cvv:
+            p.setPen(QColor(255, 255, 255))
+            p.drawText(QRectF(120, 144, 60, 24),
+                       Qt.AlignmentFlag.AlignLeft, self.card.cvv)
+        else:
+            p.setPen(QColor(255, 200, 200, 180))
+            p.drawText(QRectF(120, 144, 60, 24),
+                       Qt.AlignmentFlag.AlignLeft, "---")
 
     def _draw_qr(self, p: QPainter):
         if self._qr_pixmap and not self._qr_pixmap.isNull():
