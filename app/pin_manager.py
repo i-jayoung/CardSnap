@@ -66,6 +66,14 @@ class PinManager:
 
     def __init__(self):
         self._pins: list[PinnedCardWindow] = []
+        self._on_change_callback = None
+
+    def set_on_change(self, callback):
+        self._on_change_callback = callback
+
+    def _notify_change(self):
+        if self._on_change_callback:
+            self._on_change_callback()
 
     @property
     def count(self) -> int:
@@ -107,6 +115,7 @@ class PinManager:
     def _on_pin_closed(self, pin_window):
         if pin_window in self._pins:
             self._pins.remove(pin_window)
+            self._notify_change()
 
     def _next_position(self):
         screen = QGuiApplication.primaryScreen()

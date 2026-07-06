@@ -8,12 +8,15 @@ from app.autostart import is_autostart_enabled, set_autostart
 
 def get_app_icon() -> QIcon:
     base = os.path.join(os.path.dirname(__file__), "resources", "icons")
-    svg_path = os.path.join(base, "app_icon.svg")
-    if os.path.exists(svg_path):
-        return QIcon(svg_path)
+    ico_path = os.path.join(base, "app_icon.ico")
+    if os.path.exists(ico_path):
+        return QIcon(ico_path)
     png_path = os.path.join(base, "app_icon.png")
     if os.path.exists(png_path):
         return QIcon(png_path)
+    svg_path = os.path.join(base, "app_icon.svg")
+    if os.path.exists(svg_path):
+        return QIcon(svg_path)
     return QIcon()
 
 

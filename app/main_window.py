@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
         self._settings = load_settings()
 
         self._pin_manager = PinManager()
+        self._pin_manager.set_on_change(self._on_pins_changed)
         self._screen_capture = ScreenCapture()
         self._screen_capture.captured.connect(self._on_screenshot_captured)
         self._hotkey_manager = HotkeyManager(self)
@@ -714,6 +715,9 @@ class MainWindow(QMainWindow):
         self._pin_manager.close_all()
         self._tray.update_pins_menu()
         self._status.setText("已关闭所有钉图")
+
+    def _on_pins_changed(self):
+        self._tray.update_pins_menu()
 
     def _set_all_checked(self, checked: bool):
         for tile in self._tiles:

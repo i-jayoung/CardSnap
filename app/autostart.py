@@ -6,8 +6,15 @@ APP_NAME = "CardSnap"
 REG_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
 
 
-def _get_exe_path() -> str:
+def _is_compiled() -> bool:
     if getattr(sys, 'frozen', False):
+        return True
+    exe_name = os.path.basename(sys.executable).lower()
+    return not exe_name.startswith('python')
+
+
+def _get_exe_path() -> str:
+    if _is_compiled():
         return f'"{sys.executable}" --minimized'
     else:
         python = sys.executable
