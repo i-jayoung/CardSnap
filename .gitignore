@@ -12,3 +12,5 @@ build/
 cards.json
 settings.json
 convert_icon.py
+nuitka-crash-report.xml
+CardSnap.exe

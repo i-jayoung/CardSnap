@@ -67,9 +67,15 @@ def clean_build_artifacts(project_dir):
                                capture_output=True)
 
 
+BUILD_OUTPUT_DIR = r"C:\nb"
+
+
 def build():
     project_dir = os.path.dirname(os.path.abspath(__file__))
-    clean_build_artifacts(project_dir)
+
+    for d in [project_dir, BUILD_OUTPUT_DIR]:
+        clean_build_artifacts(d)
+    os.makedirs(BUILD_OUTPUT_DIR, exist_ok=True)
 
     venv_python = os.path.join(project_dir, ".venv", "Scripts", "python.exe")
     global_python = shutil.which("python") or sys.executable
@@ -89,6 +95,7 @@ def build():
         "--standalone",
         "--onefile",
         f"--output-filename={APP_NAME}.exe",
+        f"--output-dir={BUILD_OUTPUT_DIR}",
         f"--windows-icon-from-ico={ICON_PATH}",
         "--windows-console-mode=disable",
         "--enable-plugin=pyside6",
@@ -115,6 +122,7 @@ def build():
     print()
     print("=" * 60)
     print(f"  Building {APP_NAME} with Nuitka (single EXE)")
+    print(f"  Build dir: {BUILD_OUTPUT_DIR}")
     print("=" * 60)
     print()
     print("Full command:")
@@ -124,10 +132,15 @@ def build():
     result = subprocess.run(cmd, cwd=project_dir, env=env)
 
     if result.returncode == 0:
+        exe_src = os.path.join(BUILD_OUTPUT_DIR, f"{APP_NAME}.exe")
+        exe_dst = os.path.join(project_dir, f"{APP_NAME}.exe")
+        if os.path.isfile(exe_src):
+            shutil.copy2(exe_src, exe_dst)
+            print(f"  Copied to: {exe_dst}")
         print()
         print("=" * 60)
         print(f"  BUILD SUCCESS!")
-        print(f"  Output: {APP_NAME}.exe")
+        print(f"  Output: {exe_dst}")
         print("=" * 60)
     else:
         print()
